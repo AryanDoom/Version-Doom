@@ -154,6 +154,10 @@ int cmd_commit(const char *message) { //*message is ur commit msg
     free(head);
     free(parent);
     free(snapshot);
+    //call clear index so we can clear it for next staging func
+    if(!clear_index()){
+        fprintf(stderr,"didnt work for usm reason(the index didnt get cleared)\n");
+    } 
     return 0;
 }
 

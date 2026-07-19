@@ -150,3 +150,21 @@ int cmd_add(const char *path) { //add cmd
     free(content);
     return 0; //done
 }
+
+//shld technically work
+bool clear_index(void){
+    char *index_file = index_path();
+    if (!index_file){
+        return false;
+    }
+    FILE *f = fopen(index_file,"w"); //this shld clear the file
+    free(index_file);
+    if(!f){
+        free(index_file);
+        return false;
+    }
+    fclose(f);
+    return true;
+}
+
+bool index_check_dupe(){}

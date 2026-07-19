@@ -8,5 +8,6 @@ bool index_load(const char *path, char ***out_entries, size_t *out_count);
 bool index_write(const char *path, char **entries, size_t count);
 int cmd_add(const char *path);
 int cmd_status(void);
+bool clear_index(void);
 
 #endif
