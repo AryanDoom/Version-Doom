@@ -160,11 +160,43 @@ bool clear_index(void){
     FILE *f = fopen(index_file,"w"); //this shld clear the file
     free(index_file);
     if(!f){
-        free(index_file);
+        //free(index_file);
         return false;
     }
     fclose(f);
     return true;
 }
-
-bool index_check_dupe(){}
+//now this shld definitely fix the dupe issue , it deletes the older hashes and file saves btw commit so a commit will only have the latest version of the file
+bool index_check_dupe(const char *path){
+    if(!path){
+        return false;
+    }
+    char **entries = NULL;
+    size_t count = 0;
+    if(!index_load(".",&entries,&count)){ //makes the entries and count type shi
+        return false;
+    }
+    size_t write =0;
+    for(size_t read =0 ;read<count;read++){//
+        char *line= entries[read]; //takes the lines fr
+        char *space = strchr(line,' '); //finds the space
+        if(!space){
+            entries[write++] = line;
+            continue;
+        }
+        *space = '\0'; //ends the line at the space
+        if(strcmp(line,path)==0){ //compare
+            free(line); //delete that line if they are the same
+        }
+        else{
+            *space = ' '; //restores the string
+            entries[write++] = line; 
+        }
+    }
+    bool ok = index_write(".",entries,write);
+    for (size_t i=0; i<write; i++){ //js to free
+        free(entries[i]);
+    }
+    free(entries); //free the array
+    return ok;
+}
