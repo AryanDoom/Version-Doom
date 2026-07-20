@@ -8,7 +8,7 @@
 #include "utils.h"
 
 char *index_path(void) { //path for index dir
-    return repo_path_join(".", ".vcs/index");
+    return repo_path_join(".", ".doom/index");
 }
 
 char *read_file_bytes(const char *path, size_t *out_len) {// allocates memry reads the file 

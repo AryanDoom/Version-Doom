@@ -16,7 +16,7 @@
 #include "utils.h"
 
 char *object_dir(void) { // the part we will use here is the one inside the object folder (which we already made)
-    return repo_path_join(".", ".vcs/objects");
+    return repo_path_join(".", ".doom/objects");
 }
 
 bool object_exists(const char *hash) {

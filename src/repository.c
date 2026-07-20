@@ -25,29 +25,29 @@ int ensure_directory(const char *path) {
     return -1;
 }
 
-bool repo_init(const char *repo_path) {//initializes the repo and makes the .vcs directory and all the other directories and files that are needed for the repo to work
+bool repo_init(const char *repo_path) {//initializes the repo and makes the .doom directory and all the other directories and files that are needed for the repo to work
     if (!repo_path) {
-        repo_path = "."; //ull be inside the proj folder so .vcs ka path will be ./.vcs 
+        repo_path = "."; //ull be inside the proj folder so .doom ka path will be ./.doom 
     }
 
-    char *dot_vcs = repo_path_join(repo_path, ".vcs");  //path to .vcs direc
-    if (!dot_vcs) {
+    char *dot_doom = repo_path_join(repo_path, ".doom");  //path to .doom direc
+    if (!dot_doom) {
         return false;
     }
 
-    if (ensure_directory(dot_vcs) != 0) {
-        free(dot_vcs); //free my guy max b
+    if (ensure_directory(dot_doom) != 0) {
+        free(dot_doom); //free my guy max b
         return false;
     }
 
-    char *objects = repo_path_join(dot_vcs, "objects"); //pointers to the direcs and files we needd, the pointers are the paths 
-    char *refs = repo_path_join(dot_vcs, "refs");
-    char *head = repo_path_join(dot_vcs, "HEAD");
-    char *index = repo_path_join(dot_vcs, "index");
-    char *config = repo_path_join(dot_vcs, "config");
+    char *objects = repo_path_join(dot_doom, "objects"); //pointers to the direcs and files we needd, the pointers are the paths 
+    char *refs = repo_path_join(dot_doom, "refs");
+    char *head = repo_path_join(dot_doom, "HEAD");
+    char *index = repo_path_join(dot_doom, "index");
+    char *config = repo_path_join(dot_doom, "config");
 
     if (!objects || !refs || !head || !index || !config) { //if any of these are null then exit
-        free(dot_vcs);
+        free(dot_doom);
         free(objects);
         free(refs);
         free(head);
@@ -58,7 +58,7 @@ bool repo_init(const char *repo_path) {//initializes the repo and makes the .vcs
 
     char *heads = repo_path_join(refs, "heads"); //head is to store curr branch name,very leetcode esque
     if (!heads) { //again free everything if its null
-        free(dot_vcs);
+        free(dot_doom);
         free(objects);
         free(refs);
         free(head);
@@ -98,7 +98,7 @@ bool repo_init(const char *repo_path) {//initializes the repo and makes the .vcs
         fclose(f);
     }
 
-    free(dot_vcs); //again free everything, we dont need them anymore
+    free(dot_doom); //again free everything, we dont need them anymore
     free(objects);
     free(refs);
     free(heads);
@@ -108,14 +108,14 @@ bool repo_init(const char *repo_path) {//initializes the repo and makes the .vcs
     return ok == 0;
 }
 
-bool repo_exists(const char *repo_path) { //to check if repo exists by checking if .vcs direc is tehre or not
-    char *dot_vcs = repo_path_join(repo_path ? repo_path : ".", ".vcs");
-    if (!dot_vcs) {
+bool repo_exists(const char *repo_path) { //to check if repo exists by checking if .doom direc is tehre or not
+    char *dot_doom = repo_path_join(repo_path ? repo_path : ".", ".doom");
+    if (!dot_doom) {
         return false;
     }
-    struct stat st; //stat contains info bout the file or direc (use it to check if .vcs is there or not)
-    int rc = stat(dot_vcs, &st);
-    free(dot_vcs);
+    struct stat st; //stat contains info bout the file or direc (use it to check if .doom is there or not)
+    int rc = stat(dot_doom, &st);
+    free(dot_doom);
     return rc == 0 && S_ISDIR(st.st_mode); //s_isdirec checks if the file is a direc or not, if it is then repo exists
 }
 
@@ -138,6 +138,6 @@ int cmd_init(void) { //func call when vcs init is ran
         fprintf(stderr, "failed to initialize repository\n");
         return 1;
     }
-    printf("Initialized empty VCS repository in .vcs\n"); //type shi
+    printf("Initialized empty DOOM repository in .doom\n"); //type shi
     return 0;
 }

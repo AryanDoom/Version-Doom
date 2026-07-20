@@ -10,7 +10,7 @@
 #include "utils.h"
 
 char *read_head() { 
-    char *head_path = repo_path_join(".", ".vcs/HEAD"); //path to the header file 
+    char *head_path = repo_path_join(".", ".doom/HEAD"); //path to the header file 
     if (!head_path) { //if head path is emp
         return NULL;
     }
@@ -25,7 +25,7 @@ char *read_head() {
 }
 
 int write_head(const char *hash) { //ur file hash
-    char *head_path = repo_path_join(".", ".vcs/HEAD");
+    char *head_path = repo_path_join(".", ".doom/HEAD");
     if (!head_path) {
         return 1;
     }
@@ -48,7 +48,7 @@ int cmd_commit(const char *message) { //*message is ur commit msg
     char *parent = NULL; //null rn but it will be  the hash of the last commit
     char *head = read_head();
     if (head && strncmp(head, "ref: ", 5) == 0) { //if head begins with "ref :" which is 5 chars
-        char *vcs_path = repo_path_join(".", ".vcs"); 
+        char *vcs_path = repo_path_join(".", ".doom"); 
         if (!vcs_path) {
             free(head);
             return 1;
@@ -73,7 +73,7 @@ int cmd_commit(const char *message) { //*message is ur commit msg
         parent = xstrdup(head); //now parents also points to a copy of head 
     }
 
-    char *index_file = repo_path_join(".", ".vcs/index");
+    char *index_file = repo_path_join(".", ".doom/index");
     if (!index_file) {
         free(head);
         free(parent);
@@ -122,7 +122,7 @@ int cmd_commit(const char *message) { //*message is ur commit msg
     // after commit object is written, decide whether to update HEAD
     if (head && strncmp(head, "ref: ", 5) == 0) {
         // attached HEAD – update branch ref
-        char *vcs_path = repo_path_join(".", ".vcs");
+        char *vcs_path = repo_path_join(".", ".doom");
         if (vcs_path) {
             char *ref_path = repo_path_join(vcs_path, head + 5);
             free(vcs_path);
@@ -167,7 +167,7 @@ int cmd_log(void) { //it prints the log func, basically a linked list to print a
     }
     char hash[67] = {0}; //hash will be 65 long 
     if (strncmp(head, "ref: ", 5) == 0) {
-        char *vcs_path = repo_path_join(".", ".vcs");
+        char *vcs_path = repo_path_join(".", ".doom");
         if (!vcs_path) {
             free(head);
             return 1;

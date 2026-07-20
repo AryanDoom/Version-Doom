@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -std=c11 -Wall -Wextra -Werror -O2
-TARGET = vcs
+TARGET = doom
 SRCDIR = src
 BUILDDIR = build
 SOURCES = $(wildcard $(SRCDIR)/*.c)
