@@ -4,6 +4,7 @@
 #include <time.h>
 
 #include "commit.h"
+#include "index.h"
 #include "object.h"
 #include "repository.h"
 #include "utils.h"
@@ -22,7 +23,7 @@ char *read_head() {
     fclose(f);
     return line; //the line is ref:refs/heads/master
 }
-//technically i could store the head in a char var cuz no branches for now but we will store this if i ever decide to maek em
+
 int write_head(const char *hash) { //ur file hash
     char *head_path = repo_path_join(".", ".vcs/HEAD");
     if (!head_path) {
@@ -44,7 +45,7 @@ int cmd_commit(const char *message) { //*message is ur commit msg
         return 1;
     }
 
-    char *parent =NULL; //null rn but it will be  the hash of the last commit
+    char *parent = NULL; //null rn but it will be  the hash of the last commit
     char *head = read_head();
     if (head && strncmp(head, "ref: ", 5) == 0) { //if head begins with "ref :" which is 5 chars
         char *vcs_path = repo_path_join(".", ".vcs"); 
@@ -75,6 +76,7 @@ int cmd_commit(const char *message) { //*message is ur commit msg
     char *index_file = repo_path_join(".", ".vcs/index");
     if (!index_file) {
         free(head);
+        free(parent);
         return 1;
     }
 
@@ -97,7 +99,7 @@ int cmd_commit(const char *message) { //*message is ur commit msg
     fclose(f);
 
     char *commit_content = NULL; 
-    size_t commit_len = snprintf(NULL, 0, "parent=%s\nmessage=%s\ntime=%ld\nsnapshot=%s",parent ? parent : "", message ? message : "", (long)time(NULL), snapshot ? snapshot : ""); //elnght of the commit text
+    size_t commit_len = snprintf(NULL, 0, "parent=%s\nmessage=%s\ntime=%ld\nsnapshot=%s", parent ? parent : "", message ? message : "", (long)time(NULL), snapshot ? snapshot : ""); //elnght of the commit text
     commit_content = malloc(commit_len + 1); //alloc that much memry
     if (!commit_content) {
         free(head);
@@ -117,36 +119,33 @@ int cmd_commit(const char *message) { //*message is ur commit msg
         return 1;
     }
 
-    if (write_head(hash) != 0) { //hmmmmmm this is supposed to write the head 
-        free(hash);
-        free(commit_content);
-        free(head);
-        free(parent);
-        free(snapshot);
-        return 1;
+    // after commit object is written, decide whether to update HEAD
+    if (head && strncmp(head, "ref: ", 5) == 0) {
+        // attached HEAD – update branch ref
+        char *vcs_path = repo_path_join(".", ".vcs");
+        if (vcs_path) {
+            char *ref_path = repo_path_join(vcs_path, head + 5);
+            free(vcs_path);
+            if (ref_path) {
+                FILE *ref = fopen(ref_path, "w");
+                free(ref_path);
+                if (ref) {
+                    fprintf(ref, "%s\n", hash);
+                    fclose(ref);
+                }
+            }
+        }
+    } else {
+        // detached HEAD – write the new commit hash into HEAD
+        if (write_head(hash) != 0) {
+            free(hash);
+            free(commit_content);
+            free(head);
+            free(parent);
+            free(snapshot);
+            return 1;
+        }
     }
-
-    char *ref_path = repo_path_join(".", ".vcs/refs/heads/master"); //this is to stoer the last/latest commit
-    if (!ref_path) {
-        free(hash);
-        free(commit_content);
-        free(head);
-        free(parent);
-        free(snapshot);
-        return 1;
-    }
-    FILE *ref = fopen(ref_path, "w");
-    free(ref_path);
-    if (!ref) {
-        free(hash);
-        free(commit_content);
-        free(head);
-        free(parent);
-        free(snapshot);
-        return 1;
-    }
-    fprintf(ref, "%s\n", hash);
-    fclose(ref);
 
     printf("%s\n", hash);
     free(hash);
@@ -155,28 +154,46 @@ int cmd_commit(const char *message) { //*message is ur commit msg
     free(parent);
     free(snapshot);
     //call clear index so we can clear it for next staging func
-    if(!clear_index()){
-        fprintf(stderr,"didnt work for usm reason(the index didnt get cleared)\n");
+    if (!clear_index()) {
+        fprintf(stderr, "didnt work for usm reason(the index didnt get cleared)\n");
     } 
     return 0;
 }
 
 int cmd_log(void) { //it prints the log func, basically a linked list to print all the hashs and commits before the latest commit
-    char *head_path = repo_path_join(".", ".vcs/refs/heads/master"); //master path
-    if (!head_path) {
-        return 1;
-    }
-    FILE *f = fopen(head_path, "r"); //open the master file
-    free(head_path);
-    if (!f) {
+    char *head = read_head();
+    if (!head) {
         return 1;
     }
     char hash[67] = {0}; //hash will be 65 long 
-    if (!fgets(hash, sizeof(hash), f)) {
+    if (strncmp(head, "ref: ", 5) == 0) {
+        char *vcs_path = repo_path_join(".", ".vcs");
+        if (!vcs_path) {
+            free(head);
+            return 1;
+        }
+        char *full_ref_path = repo_path_join(vcs_path, head + 5);
+        free(vcs_path);
+        if (!full_ref_path) {
+            free(head);
+            return 1;
+        }
+        FILE *f = fopen(full_ref_path, "r");
+        free(full_ref_path);
+        if (!f) {
+            free(head);
+            return 0; // No commits yet
+        }
+        if (!fgets(hash, sizeof(hash), f)) {
+            fclose(f);
+            free(head);
+            return 1;
+        }
         fclose(f);
-        return 1;
+    } else {
+        strncpy(hash, head, sizeof(hash) - 1);
     }
-    fclose(f);
+    free(head);
     hash[strcspn(hash, "\r\n")] = '\0'; //clean up the hash string of newline and return carriage charac
 
     while (hash[0]) { //as long as the string aint enpty
@@ -191,7 +208,7 @@ int cmd_log(void) { //it prints the log func, basically a linked list to print a
         char *message = strstr(data, "message=");
         char *time = strstr(data, "time="); 
         if (parent) { //if parent is present (ishan reference) 
-            parent += 8; //cuz parent= is 8 characters so make the pointer point to the exact starting of the parent string
+            parent += 7; //cuz parent= is 7 characters so make the pointer point to the exact starting of the parent string
             char *end = strchr(parent, '\n');
             if (end) {
                 *end = '\0';

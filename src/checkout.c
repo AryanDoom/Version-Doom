@@ -13,7 +13,7 @@ char *extract_snapshot(const char *data) { //getting info from the snap shot
         return NULL;
     }
     snapshot += 9;
-    char *end = strchr(snapshot, '\0');
+    char *end = strchr(snapshot, '\n');
     if (end) {
         *end = '\0';
     }
@@ -73,5 +73,10 @@ int cmd_checkout(const char *commit_hash) { //checkout cmd
     }
 
     free(data);
+    // detach HEAD by writing the checkout hash
+    if (write_head(commit_hash) != 0) {
+        fprintf(stderr, "failed to write detached HEAD\n");
+        return 1;
+    }
     return 0;
 }
